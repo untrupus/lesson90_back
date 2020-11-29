@@ -5,7 +5,7 @@ const app = express();
 expressWs(app);
 
 const activeConnections = {};
-const pixels = [];
+let pixels = [];
 
 app.ws("/", (ws, req) => {
     const id = nanoid();
@@ -14,21 +14,17 @@ app.ws("/", (ws, req) => {
 
     ws.on("message", msg => {
         const decodedMessage = JSON.parse(msg);
-        switch(decodedMessage.type) {
+        switch (decodedMessage.type) {
             case "GET_ALL_PIXELS":
                 ws.send(JSON.stringify({type: "ALL_PIXELS", pixels}));
                 break;
-            case "CREATE_PIXEL":
+            case "CREATE_PIXELS":
                 Object.keys(activeConnections).forEach(connId => {
                     const conn = activeConnections[connId];
-                    pixels.push({
-                        pixel: decodedMessage.pixelArray
-                    });
+                    pixels = pixels.concat(decodedMessage.newPixels)
                     conn.send(JSON.stringify({
                         type: "NEW_PIXEL",
-                        message: {
-                            pixel: decodedMessage.pixel
-                        }
+                        newPixels: decodedMessage.newPixels
                     }));
                 });
                 break;
